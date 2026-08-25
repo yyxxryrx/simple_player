@@ -1,0 +1,57 @@
+module simple_player::ffmpeg::ffi;
+
+import ffi::sws;
+
+struct Rational
+{
+	int num, den;
+}
+
+typedef FormatContext = void;
+typedef CodecContext = void;
+typedef Frame = void;
+
+typedef Buffer = void;
+
+struct BufferRef
+{
+	Buffer* buffer;
+	char* data;
+	usz size;
+}
+
+struct PacketSideData
+{
+	char* data;
+	usz size;
+	PacketSideDataType type;
+}
+
+struct Packet
+{
+	BufferRef* buf;
+	long pts, dts;
+	char* data;
+	int size, stream_index, flags;
+	PacketSideData* side_data;
+	int size_data_elems;
+	long duration, pos;
+	void* opaque;
+	BufferRef* opaque_ref;
+	Rational time_base;
+}
+
+extern fn int init() @cname("avformat_network_init");
+extern fn int deinit() @cname("avformat_network_deinit");
+extern fn int open_input(FormatContext** context, ZString url, void* fmt, void** options) @cname("avformat_open_input");
+extern fn void close_input(FormatContext** context) @cname("avformat_close_input");
+extern fn void free_context(CodecContext** ctx) @cname("avcodec_free_context");
+extern fn Frame* frame_alloc() @cname("av_frame_alloc");
+extern fn Packet* packet_alloc() @cname("av_packet_alloc");
+extern fn void frame_free(Frame** frame) @cname("av_frame_free");
+extern fn void packet_free(Packet** pkt) @cname("av_packet_free");
+extern fn Frame* frame_clone(Frame* src) @cname("av_frame_clone");
+extern fn void packet_unref(Packet* pkt) @cname("av_packet_unref");
+extern fn int read_frame(FormatContext* ctx, Packet* pkt) @cname("av_read_frame");
+extern fn int send_packet(CodecContext* ctx, Packet* pkt) @cname("avcodec_send_packet");
+extern fn int receive_frame(CodecContext* ctx, Frame* frame) @cname("avcodec_receive_frame");

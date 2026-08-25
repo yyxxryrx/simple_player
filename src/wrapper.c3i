@@ -1,0 +1,47 @@
+module simple_player::ffmpeg;
+
+import ffi::sws;
+
+struct InfoResult
+{
+	CInt code;
+	CodecContext* ctx;
+	VideoInfo info;
+}
+
+struct VideoInfo
+{
+	long frame_count, dur;
+	int width, height;
+	Rational rate, time_base;
+}
+
+extern fn ZString err2str(int err);
+
+<*
+ @param [in] ctx
+
+ @require ctx != null : "Cannot be a null"
+*>
+extern fn int find_best_video(FormatContext* ctx);
+
+<*
+ @param [in] ctx
+
+ @require ctx != null : "Cannot be a null"
+*>
+extern fn int find_best_audio(FormatContext* ctx);
+
+<*
+ @param [in] ctx
+ @param [out] info
+
+ @require ctx != null : "Cannot be a null"
+*>
+extern fn bool get_info(FormatContext* ctx, int index, InfoResult* info);
+
+extern fn SwsContext* new_sws_context(CodecContext* ctx);
+extern fn void set_to_yuv(CodecContext* ctx, Frame* frame);
+extern fn int scale(SwsContext* ctx, Frame* src, Frame* dst);
+extern fn char** get_data(Frame* frame);
+extern fn int* get_linesize(Frame* frame);

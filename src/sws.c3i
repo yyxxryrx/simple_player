@@ -1,0 +1,5 @@
+module ffi::sws;
+
+typedef SwsContext = void;
+
+extern fn void free_context(SwsContext* ctx) @cname("sws_freeContext");

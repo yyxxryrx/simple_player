@@ -1,0 +1,19 @@
+{
+  "langrev": "1",
+  "warnings":  [ "no-unused" ],
+  "dependency-search-paths":  [ "lib" ],
+  "dependencies":  [ "sdl2" ],
+  "authors":  [ "yyxxryrx <yyxxryrx@outlook.com>" ],
+  "version": "0.1.0",
+  "sources":  [ "src/**" ],
+  "test-sources":  [ "test/**" ],
+  "build-dir": "build",
+  "output": "build",
+  "targets": {
+    "simple_player": {
+      "type": "executable"
+    }
+  },
+  "cpu": "generic",
+  "opt": "O0"
+}
