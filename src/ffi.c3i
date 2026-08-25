@@ -10,6 +10,7 @@ struct Rational
 typedef FormatContext = void;
 typedef CodecContext = void;
 typedef Frame = void;
+typedef SwrContext = void;
 
 typedef Buffer = void;
 
@@ -55,3 +56,5 @@ extern fn void packet_unref(Packet* pkt) @cname("av_packet_unref");
 extern fn int read_frame(FormatContext* ctx, Packet* pkt) @cname("av_read_frame");
 extern fn int send_packet(CodecContext* ctx, Packet* pkt) @cname("avcodec_send_packet");
 extern fn int receive_frame(CodecContext* ctx, Frame* frame) @cname("avcodec_receive_frame");
+extern fn CodecContext* alloc_codec_ctx(void* codec) @cname("avcodec_alloc_context3");
+const uint AUDIO_S16SYS = 0x8010;

@@ -38,10 +38,14 @@ extern fn int find_best_audio(FormatContext* ctx);
 
  @require ctx != null : "Cannot be a null"
 *>
-extern fn bool get_info(FormatContext* ctx, int index, InfoResult* info);
+extern fn bool get_info(FormatContext* ctx, int video_index, InfoResult* info);
 
 extern fn SwsContext* new_sws_context(CodecContext* ctx);
 extern fn void set_to_yuv(CodecContext* ctx, Frame* frame);
 extern fn int scale(SwsContext* ctx, Frame* src, Frame* dst);
 extern fn char** get_data(Frame* frame);
 extern fn int* get_linesize(Frame* frame);
+extern fn int new_codec_ctx(FormatContext *ctx, int index, CodecContext *video_ctx);
+extern fn int new_swr(SwrContext** swr, CodecContext* codec, int out_sample_rate);
+extern fn int resample_frame(SwrContext* swr, Frame* in_frame, Frame* out_frame, int out_sample_rate);
+extern fn int get_size(Frame* frame);

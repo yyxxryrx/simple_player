@@ -19,15 +19,17 @@ fn int main(String[] args)
 	}
 	defer ffi::close_input(&ctx);
 
-	int index = ffmpeg::find_best_video(ctx);
-	if (index < 0)
+	int video_index = ffmpeg::find_best_video(ctx);
+	if (video_index < 0)
 	{
-		log::error("FFmpeg error: %s", ffmpeg::err2str(index));
+		log::error("FFmpeg error: %s", ffmpeg::err2str(video_index));
 		return 1;
 	}
 
+	int audio_index = ffmpeg::find_best_audio(ctx);
+
 	InfoResult res;
-	if (!ffmpeg::get_info(ctx, index, &res))
+	if (!ffmpeg::get_info(ctx, video_index, &res))
 	{
 		log::error("Cannot get video info");
 		return 1;
@@ -72,22 +74,21 @@ fn int main(String[] args)
 		info.height
 	);
 
-	UnbufferedChannel{Frame*}* channel = decoder::start(ctx, res.ctx, index)!!;
+	CodecContext* audio_ctx = ffi::alloc_codec_ctx(null);
+	if (ffmpeg::new_codec_ctx(ctx, audio_index, audio_ctx) != 0)
+	{
+		log::error("FFmpeg create audio codec context failed");
+		return -1;
+	}
+
+	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
 	defer channel.destroy();
+
+	thread::Thread* thread = player::video_play(renderer, texture, channel)!!;
 
 	sdl::Event event;
 	while MAIN: (true)
 	{
-		if (try frame = channel.try_pop())
-		{
-			char** data   = ffmpeg::get_data(frame);
-			int* linesize = ffmpeg::get_linesize(frame);
-			sdl::updateYUVTexture(texture, null, data[0], linesize[0], data[1], linesize[1], data[2], linesize[2]);
-			sdl::renderClear(renderer);
-			sdl::renderCopy(renderer, texture, null, null);
-			sdl::renderPresent(renderer);
-		}
-
 		if (sdl::pollEvent(&event))
 		{
 			switch (event.type)
@@ -99,5 +100,7 @@ fn int main(String[] args)
 		}
 		thread::sleep_ms(50);
 	}
+
+	(void)thread.join();
 	return 0;
 }
