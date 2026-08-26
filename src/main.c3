@@ -2,6 +2,11 @@ module simple_player;
 import std::io;
 import std::thread;
 import sdl;
+import simple_player::ringbuffer;
+
+alias AudioBuffer = RingBuffer{char, 10 * mem::MB};
+
+AudioBuffer audio_buffer = {};
 
 fn int main(String[] args)
 {
@@ -100,7 +105,5 @@ fn int main(String[] args)
 		}
 		thread::sleep_ms(50);
 	}
-
-	(void)thread.join();
 	return 0;
 }

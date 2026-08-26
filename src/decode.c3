@@ -4,6 +4,7 @@ import std::thread;
 import std::thread::channel;
 import simple_player::ffmpeg::ffi;
 import simple_player::util;
+import simple_player::ringbuffer;
 import ffi::sws;
 
 alias FrameChannel = BufferedChannel{DecodeFrame};
@@ -72,7 +73,7 @@ fn int decoder(void* input)
 				ffi::send_packet(args.video_ctx, pkt);
 				while (ffi::receive_frame(args.video_ctx, frame) >= 0)
 				{
-					log::info("Decode %d pts video", pkt.pts);
+					log::debug("Decode %d pts video", pkt.pts);
 					ffmpeg::scale(sws_ctx, frame, yuv_frame);
 					(void)args.channel.push((DecodeFrame) { .frame = ffi::frame_clone(yuv_frame), .type = VIDEO });
 				}
@@ -81,7 +82,7 @@ fn int decoder(void* input)
 				ffi::send_packet(args.audio_ctx, pkt);
 				while (ffi::receive_frame(args.audio_ctx, frame) >= 0)
 				{
-					log::info("Decode %d pts audio", pkt.pts);
+					log::debug("Decode %d pts audio", pkt.pts);
 
 					ret = ffmpeg::resample_frame(swr, frame, audio_frame, 48000);
 					if (ret < 0)
@@ -89,12 +90,18 @@ fn int decoder(void* input)
 						log::error("resample failed: %s", ffmpeg::err2str(ret));
 						continue;
 					}
+					simple_player::audio_buffer.push_all(ffmpeg::get_data(audio_frame)[0][:ret]);
 
-					(void)args.channel.push((DecodeFrame) { .frame = ffi::frame_clone(audio_frame), .type = AUDIO });
+					// (void)args.channel.push((DecodeFrame) { .frame = ffi::frame_clone(audio_frame), .type = AUDIO });
 				}
 		}
 	}
 	return 0;
+}
+
+struct DecodeResult {
+	FrameChannel* channel;
+	RingBuffer{char, 10 * mem::MB}* buffer;
 }
 
 fn FrameChannel*? start(
@@ -105,7 +112,7 @@ fn FrameChannel*? start(
 	int audio_index
 )
 {
-	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 1024)!;
+	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 3)!;
 	defer catch channel.destroy();
 
 	DecoderArgs* args = mem::tmalloc(DecoderArgs::size);

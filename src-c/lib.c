@@ -136,12 +136,12 @@ uint8_t **get_data(AVFrame *frame) { return frame->data; }
 
 int32_t *get_linesize(AVFrame *frame) { return frame->linesize; }
 
-int32_t new_swr(SwrContext **swr, AVCodecContext* const ctx,
+int32_t new_swr(SwrContext **swr, AVCodecContext *const ctx,
                 int32_t out_sample_rate) {
     AVChannelLayout layout = AV_CHANNEL_LAYOUT_STEREO;
     int ret = swr_alloc_set_opts2(swr, &layout, AV_SAMPLE_FMT_S16,
-                                  out_sample_rate, &ctx->ch_layout, ctx->sample_fmt,
-                                  ctx->sample_rate, 0, NULL);
+                                  out_sample_rate, &ctx->ch_layout,
+                                  ctx->sample_fmt, ctx->sample_rate, 0, NULL);
     if (ret < 0)
         return ret;
 
@@ -162,7 +162,6 @@ int32_t resample_frame(SwrContext *swr, const AVFrame *in_frame,
     if (out_nb_samples <= 0)
         return 0;
 
-    
     out_frame->format = AV_SAMPLE_FMT_S16;
     out_frame->ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
     out_frame->sample_rate = out_sample_rate;
@@ -182,15 +181,13 @@ int32_t resample_frame(SwrContext *swr, const AVFrame *in_frame,
     out_frame->nb_samples = ret;
     out_frame->sample_rate = out_sample_rate;
 
-    // ret = av_channel_layout_copy(&out_frame->ch_layout, &in_frame->ch_layout);
-    // if (ret < 0) {
-    //     av_frame_unref(out_frame);
-    //     return ret;
-    // }
-
-    return out_frame->nb_samples;
+    return out_frame->linesize[0];
 }
 
-int32_t get_size(AVFrame* frame) {
+int32_t get_size(AVFrame *frame) {
     return frame->nb_samples * 2 * av_get_bytes_per_sample(frame->format);
+}
+
+double get_time(AVRational time_base, const AVFrame *frame) {
+    return av_q2d(time_base) * frame->pts;
 }

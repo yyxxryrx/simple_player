@@ -6,12 +6,27 @@ import std::thread::channel;
 import simple_player::decoder;
 import simple_player::ffmpeg::ffi;
 
+fn void audio_callback(void* userdata, char* stream, int len)
+{
+	char[] buf = mem::new_array(char, len);
+	defer mem::free(buf);
+	if (try buffer = simple_player::audio_buffer.pop_into(buf))
+	{
+		sdl::memcpy(stream, buffer, (usz)len);
+	}
+	else
+	{
+		sdl::memset(stream, 0, (usz)len);
+	}
+}
+
 struct RecArgs
 {
 	FrameChannel* rec;
 	sdl::Renderer* renderer;
 	sdl::Texture* texture;
 	sdl::AudioDeviceID id;
+	Rational video_time_base;
 }
 
 fn int rec(void* input)
@@ -21,21 +36,7 @@ fn int rec(void* input)
 	{
 		if (try DecodeFrame frame = args.rec.pop())
 		{
-			if (frame.type == DecodeFrameType.AUDIO)
-			{
-				if (frame.frame == null)
-				{
-					log::warn("Empty audio frame");
-					continue;
-				}
-
-				int data_size = ffmpeg::get_size(frame.frame);
-				if (sdl::queueAudio(args.id, ffmpeg::get_data(frame.frame)[0], (uint)data_size) < 0)
-				{
-					log::error("SDL queue audio failed: %s", sdl::getError());
-				}
-				continue;
-			}
+			defer frame.free();
 
 			char** data   = ffmpeg::get_data(frame.frame);
 			int* linesize = ffmpeg::get_linesize(frame.frame);
@@ -43,7 +44,7 @@ fn int rec(void* input)
 			sdl::renderClear(args.renderer);
 			sdl::renderCopy(args.renderer, args.texture, null, null);
 			sdl::renderPresent(args.renderer);
-			frame.free();
+			thread::sleep_ms(40);
 		}
 	}
 }
@@ -58,6 +59,7 @@ fn thread::Thread*? video_play(sdl::Renderer* renderer, sdl::Texture* texture, F
 		.format = ffi::AUDIO_S16SYS,
 		.channels = 2,
 		.samples = 1024,
+		.callback = &audio_callback,
 	};
 
 	sdl::AudioDeviceID device = sdl::openAudioDevice(null, 0, &desired, &obtained, 0);
