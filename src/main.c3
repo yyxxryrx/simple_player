@@ -89,7 +89,7 @@ fn int main(String[] args)
 	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
 	defer channel.destroy();
 
-	thread::Thread* thread = player::video_play(renderer, texture, channel)!!;
+	thread::Thread thread = player::video_play(renderer, texture, channel)!!;
 
 	sdl::Event event;
 	while MAIN: (true)

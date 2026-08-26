@@ -51,7 +51,7 @@ fn int rec(void* input)
 
 faultdef AUDIO_DEVICE_OPEN_FAILED;
 
-fn thread::Thread*? video_play(sdl::Renderer* renderer, sdl::Texture* texture, FrameChannel* channel)
+fn thread::Thread? video_play(sdl::Renderer* renderer, sdl::Texture* texture, FrameChannel* channel)
 {
 	sdl::AudioSpec obtained;
 	sdl::AudioSpec desired = {
