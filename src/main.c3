@@ -4,9 +4,7 @@ import std::thread;
 import sdl;
 import simple_player::ringbuffer;
 
-alias AudioBuffer = RingBuffer{char, 10 * mem::MB};
-
-AudioBuffer audio_buffer = { };
+RingBuffer{char, 10 * mem::MB} audio_buffer = { };
 
 fn int main(String[] args)
 {
@@ -86,6 +84,7 @@ fn int main(String[] args)
 		log::error("FFmpeg create audio codec context failed");
 		return -1;
 	}
+	defer ffi::free_context(audio_ctx);
 
 	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
 	defer channel.destroy();
