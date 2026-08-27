@@ -93,5 +93,10 @@ rule("c3")
             end
         end
 
+        for _, lib in ipairs(as_list(target:get("syslinks"))) do
+            table.insert(argv, "-l")
+            table.insert(argv, lib)
+        end
+
         os.vrunv(c3c.program, argv)
     end)

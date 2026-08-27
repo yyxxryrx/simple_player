@@ -16,6 +16,9 @@ target("simple_player")
     add_deps("wrapper")
     add_files("src/*.c3", "src/*.c3i")
     add_packages("ffmpeg")
+    if not is_os("windows") then
+        add_syslinks("m")
+    end
     on_load(function (target)
         target:add("c3c_flags", "--lib")
         target:add("c3c_flags", "sdl2")
