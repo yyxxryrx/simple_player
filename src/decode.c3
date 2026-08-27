@@ -17,6 +17,7 @@ enum DecodeFrameType
 
 struct DecodeFrame
 {
+	long pts;
 	Frame* frame;
 	DecodeFrameType type;
 }
@@ -57,7 +58,8 @@ fn int decoder(void* input)
 
 	ffi::SwrContext* swr;
 	int ret = ffmpeg::new_swr(&swr, args.audio_ctx, 48000);
-	if (ret < 0) {
+	if (ret < 0)
+	{
 		log::error("FFmpeg swr create failed: %s", ffmpeg::err2str(ret));
 		return -1;
 	}
@@ -66,6 +68,7 @@ fn int decoder(void* input)
 	while (ffi::read_frame(args.format_ctx, pkt) >= 0)
 	{
 		defer ffi::packet_unref(pkt);
+		defer ffi::frame_unref(frame);
 
 		switch (pkt.stream_index)
 		{
@@ -73,9 +76,12 @@ fn int decoder(void* input)
 				ffi::send_packet(args.video_ctx, pkt);
 				while (ffi::receive_frame(args.video_ctx, frame) >= 0)
 				{
-					log::debug("Decode %d pts video", pkt.pts);
+					long pts = ffmpeg::get_pts(frame);
+					log::debug("Decode %d pts video", pts);
 					ffmpeg::scale(sws_ctx, frame, yuv_frame);
-					(void)args.channel.push((DecodeFrame) { .frame = ffi::frame_clone(yuv_frame), .type = VIDEO });
+					(void)args.channel.push(
+						(DecodeFrame) { .pts = pts, .frame = ffi::frame_clone(yuv_frame), .type = VIDEO }
+					);
 				}
 
 			case args.audio_index:
@@ -85,6 +91,7 @@ fn int decoder(void* input)
 					log::debug("Decode %d pts audio", pkt.pts);
 
 					ret = ffmpeg::resample_frame(swr, frame, audio_frame, 48000);
+					defer ffi::frame_unref(audio_frame);
 					if (ret < 0)
 					{
 						log::error("resample failed: %s", ffmpeg::err2str(ret));
@@ -99,7 +106,8 @@ fn int decoder(void* input)
 	return 0;
 }
 
-struct DecodeResult {
+struct DecodeResult
+{
 	FrameChannel* channel;
 	RingBuffer{char, 10 * mem::MB}* buffer;
 }
@@ -112,7 +120,7 @@ fn FrameChannel*? start(
 	int audio_index
 )
 {
-	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 3)!;
+	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 24)!;
 	defer catch channel.destroy();
 
 	DecoderArgs* args = mem::tmalloc(DecoderArgs::size);

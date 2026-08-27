@@ -6,7 +6,7 @@ import simple_player::ringbuffer;
 
 alias AudioBuffer = RingBuffer{char, 10 * mem::MB};
 
-AudioBuffer audio_buffer = {};
+AudioBuffer audio_buffer = { };
 
 fn int main(String[] args)
 {
@@ -47,6 +47,7 @@ fn int main(String[] args)
 		return 1;
 	}
 	VideoInfo info = res.info;
+	util::@display(VideoInfo, info);
 
 	if (sdl::init(sdl::INIT_VIDEO | sdl::INIT_AUDIO) < 0)
 	{
@@ -89,7 +90,13 @@ fn int main(String[] args)
 	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
 	defer channel.destroy();
 
-	thread::Thread thread = player::video_play(renderer, texture, channel)!!;
+	thread::Thread thread = player::video_play(
+		renderer,
+		texture,
+		channel,
+		info.time_base,
+		ffmpeg::get_time(info.rate, 1)
+	)!!;
 
 	sdl::Event event;
 	while MAIN: (true)

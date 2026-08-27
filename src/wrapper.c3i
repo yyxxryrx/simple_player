@@ -49,4 +49,5 @@ extern fn int new_codec_ctx(FormatContext* ctx, int index, CodecContext* video_c
 extern fn int new_swr(SwrContext** swr, CodecContext* codec, int out_sample_rate);
 extern fn int resample_frame(SwrContext* swr, Frame* in_frame, Frame* out_frame, int out_sample_rate);
 extern fn int get_size(Frame* frame);
-extern fn double get_time(Rational time_base, Frame* frame);
+extern fn double get_time(Rational time_base, long pts);
+extern fn long get_pts(Frame* frame);

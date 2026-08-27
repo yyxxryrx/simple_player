@@ -127,7 +127,7 @@ void set_to_yuv(AVCodecContext *ctx, AVFrame *frame) {
     av_frame_get_buffer(frame, 0);
 }
 
-int scale(SwsContext *ctx, AVFrame *src, AVFrame *dst) {
+int scale(struct SwsContext *ctx, AVFrame *src, AVFrame *dst) {
     return sws_scale(ctx, (const uint8_t *const *)src->data, src->linesize, 0,
                      src->height, dst->data, dst->linesize);
 }
@@ -188,6 +188,10 @@ int32_t get_size(AVFrame *frame) {
     return frame->nb_samples * 2 * av_get_bytes_per_sample(frame->format);
 }
 
-double get_time(AVRational time_base, const AVFrame *frame) {
-    return av_q2d(time_base) * frame->pts;
+double get_time(AVRational time_base, int64_t pts) {
+    return av_q2d(time_base) * pts;
+}
+
+int64_t get_pts(const AVFrame* frame) {
+    return frame->pts;
 }

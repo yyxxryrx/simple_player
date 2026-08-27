@@ -52,6 +52,7 @@ extern fn Packet* packet_alloc() @cname("av_packet_alloc");
 extern fn void frame_free(Frame** frame) @cname("av_frame_free");
 extern fn void packet_free(Packet** pkt) @cname("av_packet_free");
 extern fn Frame* frame_clone(Frame* src) @cname("av_frame_clone");
+extern fn void frame_unref(Frame* frame) @cname("av_frame_unref");
 extern fn void packet_unref(Packet* pkt) @cname("av_packet_unref");
 extern fn int read_frame(FormatContext* ctx, Packet* pkt) @cname("av_read_frame");
 extern fn int send_packet(CodecContext* ctx, Packet* pkt) @cname("avcodec_send_packet");
