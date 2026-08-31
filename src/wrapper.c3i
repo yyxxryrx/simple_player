@@ -40,7 +40,7 @@ extern fn int find_best_audio(FormatContext* ctx);
 *>
 extern fn bool get_info(FormatContext* ctx, int video_index, InfoResult* info);
 
-extern fn SwsContext* new_sws_context(CodecContext* ctx);
+extern fn SwsContext* new_sws_context(Frame* ctx);
 extern fn void set_to_yuv(CodecContext* ctx, Frame* frame);
 extern fn int scale(SwsContext* ctx, Frame* src, Frame* dst);
 extern fn char** get_data(Frame* frame);

@@ -113,14 +113,13 @@ bool get_info(AVFormatContext *ctx, int32_t index, InfoResult *res) {
     return true;
 }
 
-struct SwsContext *new_sws_context(const AVCodecContext *codec_ctx) {
-    return sws_getContext(codec_ctx->width, codec_ctx->height,
-                          codec_ctx->pix_fmt, codec_ctx->width,
-                          codec_ctx->height, AV_PIX_FMT_YUV420P, SWS_BILINEAR,
-                          NULL, NULL, NULL);
+struct SwsContext *new_sws_context(const AVFrame *frame) {
+    return sws_getContext(frame->width, frame->height, frame->format,
+                          frame->width, frame->height, AV_PIX_FMT_YUV420P,
+                          SWS_BILINEAR, NULL, NULL, NULL);
 }
 
-void set_to_yuv(AVCodecContext *ctx, AVFrame *frame) {
+void set_to_yuv(const AVCodecContext *ctx, AVFrame *frame) {
     frame->format = AV_PIX_FMT_YUV420P;
     frame->width = ctx->width;
     frame->height = ctx->height;
@@ -192,6 +191,4 @@ double get_time(AVRational time_base, int64_t pts) {
     return av_q2d(time_base) * pts;
 }
 
-int64_t get_pts(const AVFrame* frame) {
-    return frame->pts;
-}
+int64_t get_pts(const AVFrame *frame) { return frame->pts; }

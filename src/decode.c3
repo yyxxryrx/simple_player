@@ -53,7 +53,7 @@ fn int decoder(void* input)
 	Packet* pkt = ffi::packet_alloc();
 	defer ffi::packet_free(&pkt);
 
-	sws::SwsContext* sws_ctx = ffmpeg::new_sws_context(args.video_ctx);
+	sws::SwsContext* sws_ctx;
 	defer sws::free_context(sws_ctx);
 
 	ffi::SwrContext* swr;
@@ -76,6 +76,7 @@ fn int decoder(void* input)
 				ffi::send_packet(args.video_ctx, pkt);
 				while (ffi::receive_frame(args.video_ctx, frame) >= 0)
 				{
+					if (sws_ctx == null) sws_ctx = ffmpeg::new_sws_context(frame);
 					long pts = ffmpeg::get_pts(frame);
 					log::debug("Decode %d pts video", pts);
 					ffmpeg::scale(sws_ctx, frame, yuv_frame);
@@ -91,12 +92,13 @@ fn int decoder(void* input)
 					log::debug("Decode %d pts audio", pkt.pts);
 
 					ret = ffmpeg::resample_frame(swr, frame, audio_frame, 48000);
-					defer ffi::frame_unref(audio_frame);
 					if (ret < 0)
 					{
 						log::error("resample failed: %s", ffmpeg::err2str(ret));
 						continue;
 					}
+					defer ffi::frame_unref(audio_frame);
+
 					simple_player::audio_buffer.push_all(ffmpeg::get_data(audio_frame)[0][:ret]);
 
 					// (void)args.channel.push((DecodeFrame) { .frame = ffi::frame_clone(audio_frame), .type = AUDIO });

@@ -30,6 +30,8 @@ fn int main(String[] args)
 	}
 
 	int audio_index = ffmpeg::find_best_audio(ctx);
+	if (audio_index < 0) log::warn("FFmpeg warn: %s", ffmpeg::err2str(audio_index));
+	
 
 	InfoResult res;
 	if (!ffmpeg::get_info(ctx, video_index, &res))
@@ -84,7 +86,7 @@ fn int main(String[] args)
 		log::error("FFmpeg create audio codec context failed");
 		return -1;
 	}
-	defer ffi::free_context(audio_ctx);
+	defer ffi::free_context(&audio_ctx);
 
 	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
 	defer channel.destroy();
