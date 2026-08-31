@@ -3,6 +3,10 @@
 
 rule("c3")
     set_extensions(".c3", ".c3i")
+    on_load(function (target) 
+        local c3c = import("lib.detect.find_tool")("c3c")
+        target:add("c3c", c3c.program)
+    end)
 
     on_build(function (target)
         local function as_list(v)
@@ -14,7 +18,7 @@ rule("c3")
             return {}
         end
 
-        local c3c = import("lib.detect.find_tool")("c3c")
+        local c3c = target:get("c3c")
 
         local c3files = {}
         for _, src in ipairs(target:sourcefiles()) do
@@ -98,5 +102,5 @@ rule("c3")
             table.insert(argv, lib)
         end
 
-        os.vrunv(c3c.program, argv)
+        os.vrunv(c3c, argv)
     end)
