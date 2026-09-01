@@ -164,7 +164,7 @@ int32_t resample_frame(SwrContext *swr, const AVFrame *in_frame,
     out_frame->format = AV_SAMPLE_FMT_S16;
     out_frame->ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
     out_frame->sample_rate = out_sample_rate;
-    out_frame->nb_samples = in_frame->nb_samples;
+    out_frame->nb_samples = out_nb_samples;
 
     int ret = av_frame_get_buffer(out_frame, 0);
     if (ret < 0)
