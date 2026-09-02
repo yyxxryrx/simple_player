@@ -111,7 +111,6 @@ fn int decoder(void* input)
 struct DecodeResult
 {
 	FrameChannel* channel;
-	RingBuffer{char, 10 * mem::MB}* buffer;
 }
 
 fn FrameChannel*? start(

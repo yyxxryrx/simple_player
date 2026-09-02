@@ -4,7 +4,7 @@ import std::thread;
 import sdl;
 import simple_player::ringbuffer;
 
-RingBuffer{char, 10 * mem::MB} audio_buffer = { };
+RingBuffer{char, 15 * mem::MB} audio_buffer = { };
 
 fn int main(String[] args)
 {
