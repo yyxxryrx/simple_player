@@ -9,17 +9,10 @@ import ffi::sws;
 
 alias FrameChannel = BufferedChannel{DecodeFrame};
 
-enum DecodeFrameType
-{
-	VIDEO,
-	AUDIO,
-}
-
 struct DecodeFrame
 {
 	long pts;
 	Frame* frame;
-	DecodeFrameType type;
 }
 
 struct DecoderArgs
@@ -80,9 +73,7 @@ fn int decoder(void* input)
 					long pts = ffmpeg::get_pts(frame);
 					log::debug("Decode %d pts video", pts);
 					ffmpeg::scale(sws_ctx, frame, yuv_frame);
-					(void)args.channel.push(
-						(DecodeFrame) { .pts = pts, .frame = ffi::frame_clone(yuv_frame), .type = VIDEO }
-					);
+					(void)args.channel.push((DecodeFrame) { .pts = pts, .frame = ffi::frame_clone(yuv_frame) });
 				}
 
 			case args.audio_index:
@@ -106,11 +97,6 @@ fn int decoder(void* input)
 		}
 	}
 	return 0;
-}
-
-struct DecodeResult
-{
-	FrameChannel* channel;
 }
 
 fn FrameChannel*? start(
