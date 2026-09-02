@@ -122,7 +122,7 @@ fn FrameChannel*? start(
 	int audio_index
 )
 {
-	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 24)!;
+	FrameChannel* channel = channel::create_buffered{DecodeFrame}(mem, 30)!;
 	defer catch channel.destroy();
 
 	DecoderArgs* args = mem::tmalloc(DecoderArgs::size);

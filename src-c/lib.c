@@ -179,6 +179,7 @@ int32_t resample_frame(SwrContext *swr, const AVFrame *in_frame,
 
     out_frame->nb_samples = ret;
     out_frame->sample_rate = out_sample_rate;
+    out_frame->linesize[0] = ret * 2 *av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 
     return out_frame->linesize[0];
 }
