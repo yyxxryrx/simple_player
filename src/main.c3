@@ -4,114 +4,102 @@ import std::thread;
 import sdl;
 import simple_player::ringbuffer;
 
-RingBuffer{char, 15 * mem::MB} audio_buffer = { };
+RingBuffer{char, 2 * mem::MB} audio_buffer = { };
 
-fn int main(String[] args)
-{
-	if (args.len < 2) return 0;
+fn int main(String[] args) {
+    if (args.len < 2) return 0;
 
-	ffi::init();
-	defer ffi::deinit();
+    ffi::init();
+    defer ffi::deinit();
 
-	FormatContext* ctx;
-	int ret = ffi::open_input(&ctx, (ZString)args[1], null, null);
-	if (ret != 0)
-	{
-		log::error("FFmpeg error: %s", ffmpeg::err2str(ret));
-		return 1;
-	}
-	defer ffi::close_input(&ctx);
+    FormatContext* ctx;
+    int ret = ffi::open_input(&ctx, (ZString)args[1].ptr, null, null);
+    if (ret != 0) {
+        log::error("FFmpeg error: %s", ffmpeg::err2str(ret));
+        return 1;
+    }
+    defer ffi::close_input(&ctx);
 
-	int video_index = ffmpeg::find_best_video(ctx);
-	if (video_index < 0)
-	{
-		log::error("FFmpeg error: %s", ffmpeg::err2str(video_index));
-		return 1;
-	}
+    int video_index = ffmpeg::find_best_video(ctx);
+    if (video_index < 0) {
+        log::error("FFmpeg error: %s", ffmpeg::err2str(video_index));
+        return 1;
+    }
 
-	int audio_index = ffmpeg::find_best_audio(ctx);
-	if (audio_index < 0) log::warn("FFmpeg warn: %s", ffmpeg::err2str(audio_index));
-	
+    int audio_index = ffmpeg::find_best_audio(ctx);
+    if (audio_index < 0) log::warn("FFmpeg warn: %s", ffmpeg::err2str(audio_index));
 
-	InfoResult res;
-	if (!ffmpeg::get_info(ctx, video_index, &res))
-	{
-		log::error("Cannot get video info");
-		return 1;
-	}
-	defer ffi::free_context(&res.ctx);
 
-	if (res.code != 0)
-	{
-		log::error("FFmpeg error: %s", ffmpeg::err2str(res.code));
-		return 1;
-	}
-	VideoInfo info = res.info;
-	util::@display(VideoInfo, info);
+    InfoResult res;
+    if (!ffmpeg::get_info(ctx, video_index, &res)) {
+        log::error("Cannot get video info");
+        return 1;
+    }
+    defer ffi::free_context(&res.ctx);
 
-	if (sdl::init(sdl::INIT_VIDEO | sdl::INIT_AUDIO) < 0)
-	{
-		log::error("SDL Init failed: %s", (ZString)sdl::getError());
-		return -1;
-	}
-	defer sdl::quit();
+    if (res.code != 0) {
+        log::error("FFmpeg error: %s", ffmpeg::err2str(res.code));
+        return 1;
+    }
+    VideoInfo info = res.info;
+    util::@display(VideoInfo, info);
 
-	sdl::Window* w = sdl::createWindow("Hi", 100, 100, info.width, info.height, 0);
-	if (w == null)
-	{
-		log::error("SDL create window failed: %s", (ZString)sdl::getError());
-		return -1;
-	}
-	defer sdl::destroyWindow(w);
-	log::info("SDL create window sucessed");
+    if (sdl::init(sdl::INIT_VIDEO | sdl::INIT_AUDIO) < 0) {
+        log::error("SDL Init failed: %s", (ZString)sdl::getError());
+        return -1;
+    }
+    defer sdl::quit();
 
-	sdl::Renderer* renderer = sdl::createRenderer(w, -1, 0);
-	if (renderer == null)
-	{
-		log::error("SDL create renderer failed: %s", (ZString)sdl::getError());
-		return -1;
-	}
+    sdl::Window* w = sdl::createWindow((ZString)args[1].ptr, 100, 100, info.width, info.height, 0);
+    if (w == null) {
+        log::error("SDL create window failed: %s", (ZString)sdl::getError());
+        return -1;
+    }
+    defer sdl::destroyWindow(w);
+    log::info("SDL create window sucessed");
 
-	sdl::Texture* texture = sdl::createTexture(
-		renderer,
-		(uint)sdl::PixelFormatEnum.IYUV,
-		(int)sdl::TextureAccess.TEXTUREACCESS_STREAMING,
-		info.width,
-		info.height
-	);
+    sdl::Renderer* renderer = sdl::createRenderer(w, -1, 0);
+    if (renderer == null) {
+        log::error("SDL create renderer failed: %s", (ZString)sdl::getError());
+        return -1;
+    }
 
-	CodecContext* audio_ctx = ffi::alloc_codec_ctx(null);
-	if (ffmpeg::new_codec_ctx(ctx, audio_index, audio_ctx) != 0)
-	{
-		log::error("FFmpeg create audio codec context failed");
-		return -1;
-	}
-	defer ffi::free_context(&audio_ctx);
+    sdl::Texture* texture = sdl::createTexture(
+        renderer,
+        (uint)sdl::PixelFormatEnum.IYUV,
+        (int)sdl::TextureAccess.TEXTUREACCESS_STREAMING,
+        info.width,
+        info.height
+    );
 
-	decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
-	defer channel.destroy();
+    CodecContext* audio_ctx = ffi::alloc_codec_ctx(null);
+    if (ffmpeg::new_codec_ctx(ctx, audio_index, audio_ctx) != 0) {
+        log::error("FFmpeg create audio codec context failed");
+        return -1;
+    }
+    defer ffi::free_context(&audio_ctx);
 
-	thread::Thread thread = player::video_play(
-		renderer,
-		texture,
-		channel,
-		info.time_base,
-		ffmpeg::get_time(info.rate, 1)
-	)!!;
+    decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
+    defer channel.destroy();
 
-	sdl::Event event;
-	while MAIN: (true)
-	{
-		if (sdl::pollEvent(&event))
-		{
-			switch (event.type)
-			{
-				case sdl::EventType.QUIT:
-					log::debug("SDL Event: Quit the window");
-					break MAIN;
-			}
-		}
-		thread::sleep_ms(50);
-	}
-	return 0;
+    thread::Thread thread = player::video_play(
+        renderer,
+        texture,
+        channel,
+        info.time_base,
+        ffmpeg::get_time(info.rate, 1)
+    )!!;
+
+    sdl::Event event;
+    while MAIN: (true) {
+        if (sdl::pollEvent(&event)) {
+            switch (event.type) {
+                case sdl::EventType.QUIT:
+                    log::debug("SDL Event: Quit the window");
+                    break MAIN;
+            }
+        }
+        thread::sleep_ms(50);
+    }
+    return 0;
 }

@@ -2,9 +2,8 @@ module simple_player::ffmpeg::ffi;
 
 import ffi::sws;
 
-struct Rational
-{
-	int num, den;
+struct Rational {
+    int num, den;
 }
 
 typedef FormatContext = void;
@@ -14,32 +13,29 @@ typedef SwrContext = void;
 
 typedef Buffer = void;
 
-struct BufferRef
-{
-	Buffer* buffer;
-	char* data;
-	usz size;
+struct BufferRef {
+    Buffer* buffer;
+    char* data;
+    usz size;
 }
 
-struct PacketSideData
-{
-	char* data;
-	usz size;
-	PacketSideDataType type;
+struct PacketSideData {
+    char* data;
+    usz size;
+    PacketSideDataType type;
 }
 
-struct Packet
-{
-	BufferRef* buf;
-	long pts, dts;
-	char* data;
-	int size, stream_index, flags;
-	PacketSideData* side_data;
-	int size_data_elems;
-	long duration, pos;
-	void* opaque;
-	BufferRef* opaque_ref;
-	Rational time_base;
+struct Packet {
+    BufferRef* buf;
+    long pts, dts;
+    char* data;
+    int size, stream_index, flags;
+    PacketSideData* side_data;
+    int size_data_elems;
+    long duration, pos;
+    void* opaque;
+    BufferRef* opaque_ref;
+    Rational time_base;
 }
 
 extern fn int init() @cname("avformat_network_init");
