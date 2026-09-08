@@ -54,7 +54,7 @@ fn int main(String[] args) {
     }
     defer sdl::quit();
 
-    sdl::Window* w = sdl::createWindow((ZString)args[1].ptr, 100, 100, info.width, info.height, 0);
+    Window* w = sdl::createWindow((ZString)args[1].ptr, 100, 100, info.width, info.height, 0);
     if (w == null) {
         log::error("SDL create window failed: %s", (ZString)sdl::getError());
         return -1;
@@ -62,13 +62,13 @@ fn int main(String[] args) {
     defer sdl::destroyWindow(w);
     log::info("SDL create window sucessed");
 
-    sdl::Renderer* renderer = sdl::createRenderer(w, -1, 0);
+    Renderer* renderer = sdl::createRenderer(w, -1, 0);
     if (renderer == null) {
         log::error("SDL create renderer failed: %s", (ZString)sdl::getError());
         return -1;
     }
 
-    sdl::Texture* texture = sdl::createTexture(
+    Texture* texture = sdl::createTexture(
         renderer,
         (uint)sdl::PixelFormatEnum.IYUV,
         (int)sdl::TextureAccess.TEXTUREACCESS_STREAMING,
@@ -83,7 +83,7 @@ fn int main(String[] args) {
     }
     defer ffi::free_context(&audio_ctx);
 
-    decoder::DecodeHandle handle = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
+    DecodeHandle handle = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
     defer handle.channel.destroy();
 
     thread::Thread thread = player::video_play(
@@ -94,11 +94,11 @@ fn int main(String[] args) {
         ffmpeg::get_time(info.rate, 1)
     )!!;
 
-    sdl::Event event;
+    Event event;
     while MAIN: (true) {
         if (sdl::pollEvent(&event)) {
             switch (event.type) {
-                case sdl::EventType.QUIT:
+                case EventType.QUIT:
                     log::debug("SDL Event: Quit the window");
                     is_running.store(false, AtomicOrdering.RELEASE);
                     break MAIN;
