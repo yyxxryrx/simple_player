@@ -1,5 +1,6 @@
 module simple_player;
 import std::io;
+import std::math;
 import std::thread;
 import std::atomic;
 import sdl;
@@ -7,6 +8,7 @@ import simple_player::ringbuffer;
 
 RingBuffer{char, 2 * mem::MB} audio_buffer = { };
 Atomic{bool} is_running;
+Atomic{sdl::Rect} rect;
 
 fn int main(String[] args) {
     if (args.len < 2) return 0;
@@ -61,6 +63,7 @@ fn int main(String[] args) {
     }
     defer sdl::destroyWindow(w);
     log::info("SDL create window sucessed");
+    sdl::setWindowResizable(w, true);
 
     Renderer* renderer = sdl::createRenderer(w, -1, 0);
     if (renderer == null) {
@@ -94,6 +97,8 @@ fn int main(String[] args) {
         ffmpeg::get_time(info.rate, 1)
     )!!;
 
+    rect.store({ .w = info.width, .h = info.height }, AtomicOrdering.RELEASE);
+
     Event event;
     while MAIN: (true) {
         if (sdl::pollEvent(&event)) {
@@ -102,6 +107,25 @@ fn int main(String[] args) {
                     log::debug("SDL Event: Quit the window");
                     is_running.store(false, AtomicOrdering.RELEASE);
                     break MAIN;
+                case EventType.WINDOWEVENT:
+                    switch ((WindowEventID)event.window.event) {
+                        // case WindowEventID.WINDOWEVENT_RESIZED:
+                        case WindowEventID.WINDOWEVENT_SIZE_CHANGED:
+                            int width = event.window.data1;
+                            int height = event.window.data2;
+                            log::info("Resize to: %dx%d", width, height);
+                            sdl::renderFlush(renderer);
+                            int height2 = width * info.height / info.width;
+                            int width2 = height * info.width / info.height;
+                            sdl::Rect new_rect;
+                            if (width * height2 < width2 * height) {
+                                new_rect = { .w = width, .h = height2, .y = (height - height2) / 2 };
+                            } else {
+                                new_rect = { .w = width2, .h = height, .x = (width - width2) / 2 };
+                            }
+                            rect.store(new_rect, AtomicOrdering.RELEASE);
+                        default:
+                    }
             }
         }
         thread::sleep_ms(50);

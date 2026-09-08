@@ -52,7 +52,9 @@ fn int rec(void* input) {
 
             sdl::updateYUVTexture(args.texture, null, data[0], linesize[0], data[1], linesize[1], data[2], linesize[2]);
             sdl::renderClear(args.renderer);
-            sdl::renderCopy(args.renderer, args.texture, null, null);
+
+            sdl::Rect rect = simple_player::rect.load(AtomicOrdering.ACQUIRE);
+            sdl::renderCopy(args.renderer, args.texture, null, &rect);
 
             log::debug("w: %d, o: %d, a: %d, v: %d, p: %d", wait, offset, get_pos(), pts, frame.pts);
             thread::sleep(wait);
