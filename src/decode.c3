@@ -56,6 +56,7 @@ fn int decoder(void* input) {
         log::error("FFmpeg swr create failed: %s", ffmpeg::err2str(ret));
         return -1;
     }
+    defer ffi::swr_free(&swr);
 
 
     while (ffi::read_frame(args.format_ctx, pkt) >= 0) {
