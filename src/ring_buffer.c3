@@ -50,7 +50,7 @@ fn Type? RingBuffer.pop(&self) {
 fn Type[]? RingBuffer.pop_into(&self, Type[] target) {
     if (self.is_empty()) return target[:0];
 
-    sz len = min(target.len, self.free_size());
+    sz len = min(target.len, self.available());
     for (sz i = 0; i < len; i++) target[i] = self.pop()!;
 
     return target[:len];
@@ -66,7 +66,7 @@ fn bool RingBuffer.is_full(
 
 fn usz RingBuffer.len(&self) @operator(len) => SIZE;
 
-fn sz RingBuffer.free_size(
+fn sz RingBuffer.available(
     &self
 ) => SIZE - (sz)(self.tail.load(mem::AtomicOrdering.ACQUIRE) - self.head.load(mem::AtomicOrdering.ACQUIRE));
 

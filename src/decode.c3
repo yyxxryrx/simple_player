@@ -9,6 +9,11 @@ import ffi::sws;
 
 alias FrameChannel = BufferedChannel{DecodeFrame};
 
+struct DecodeHandle {
+    FrameChannel* channel;
+    Thread thread;
+}
+
 struct DecodeFrame {
     long pts;
     Frame* frame;
@@ -56,6 +61,7 @@ fn int decoder(void* input) {
     while (ffi::read_frame(args.format_ctx, pkt) >= 0) {
         defer ffi::packet_unref(pkt);
         defer ffi::frame_unref(frame);
+        if (!simple_player::is_running.load(AtomicOrdering.ACQUIRE)) return 0;
 
         switch (pkt.stream_index) {
             case args.video_index:
@@ -89,7 +95,7 @@ fn int decoder(void* input) {
     return 0;
 }
 
-fn FrameChannel*? start(
+fn DecodeHandle? start(
     FormatContext* fmt_ctx,
     CodecContext* video_ctx,
     CodecContext* audio_ctx,
@@ -114,5 +120,5 @@ fn FrameChannel*? start(
         &decoder,
         args,
     )!;
-    return channel;
+    return { .channel = channel, .thread = thread };
 }

@@ -1,13 +1,17 @@
 module simple_player;
 import std::io;
 import std::thread;
+import std::atomic;
 import sdl;
 import simple_player::ringbuffer;
 
 RingBuffer{char, 2 * mem::MB} audio_buffer = { };
+Atomic{bool} is_running;
 
 fn int main(String[] args) {
     if (args.len < 2) return 0;
+
+    is_running.store(true, AtomicOrdering.RELEASE);
 
     ffi::init();
     defer ffi::deinit();
@@ -79,13 +83,13 @@ fn int main(String[] args) {
     }
     defer ffi::free_context(&audio_ctx);
 
-    decoder::FrameChannel* channel = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
-    defer channel.destroy();
+    decoder::DecodeHandle handle = decoder::start(ctx, res.ctx, audio_ctx, video_index, audio_index)!!;
+    defer handle.channel.destroy();
 
     thread::Thread thread = player::video_play(
         renderer,
         texture,
-        channel,
+        handle.channel,
         info.time_base,
         ffmpeg::get_time(info.rate, 1)
     )!!;
@@ -96,10 +100,14 @@ fn int main(String[] args) {
             switch (event.type) {
                 case sdl::EventType.QUIT:
                     log::debug("SDL Event: Quit the window");
+                    is_running.store(false, AtomicOrdering.RELEASE);
                     break MAIN;
             }
         }
         thread::sleep_ms(50);
     }
+
+    (void)handle.thread.join();
+
     return 0;
 }
