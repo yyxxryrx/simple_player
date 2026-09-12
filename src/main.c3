@@ -5,6 +5,7 @@ import std::thread;
 import std::atomic;
 import sdl;
 import simple_player::ringbuffer;
+import simple_player::renderer;
 
 RingBuffer{char, 2 * mem::MB} audio_buffer = { };
 Atomic{bool} is_running;
@@ -65,14 +66,17 @@ fn int main(String[] args) {
     log::info("SDL create window sucessed");
     sdl::setWindowResizable(w, true);
 
-    Renderer* renderer = sdl::createRenderer(w, -1, 0);
-    if (renderer == null) {
+    renderer::Renderer renderer;
+    sdl::Renderer* rer = sdl::createRenderer(w, -1, 0);
+    if (rer == null) {
         log::error("SDL create renderer failed: %s", (ZString)sdl::getError());
         return -1;
     }
+    renderer.init(rer)!!;
+    defer (void)renderer.destroy();
 
     Texture* texture = sdl::createTexture(
-        renderer,
+        rer,
         (uint)sdl::PixelFormatEnum.IYUV,
         (int)sdl::TextureAccess.TEXTUREACCESS_STREAMING,
         info.width,
@@ -114,7 +118,9 @@ fn int main(String[] args) {
                             int width = event.window.data1;
                             int height = event.window.data2;
                             log::info("Resize to: %dx%d", width, height);
-                            sdl::renderFlush(renderer);
+                            (void)renderer.@with(; r) {
+                                sdl::renderFlush(r);
+                            };
                             int height2 = width * info.height / info.width;
                             int width2 = height * info.width / info.height;
                             sdl::Rect new_rect;
