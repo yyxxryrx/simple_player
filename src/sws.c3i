@@ -1,4 +1,4 @@
-module ffi::sws;
+module simple_player::ffmpeg::ffi::sws;
 
 typedef SwsContext = void;
 

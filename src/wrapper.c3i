@@ -1,6 +1,6 @@
 module simple_player::ffmpeg;
 
-import ffi::sws;
+import simple_player::ffmpeg::ffi::sws;
 
 struct InfoResult {
     CInt code;

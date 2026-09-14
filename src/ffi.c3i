@@ -1,6 +1,6 @@
 module simple_player::ffmpeg::ffi;
 
-import ffi::sws;
+import simple_player::ffmpeg::ffi::sws;
 
 struct Rational {
     int num, den;

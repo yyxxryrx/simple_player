@@ -1,5 +1,5 @@
 module simple_player::ffmpeg;
-import ffi;
+import simple_player::ffmpeg::ffi;
 
 faultdef CONVERT_FAILED;
 

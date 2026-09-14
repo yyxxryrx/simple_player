@@ -5,7 +5,7 @@ import std::thread::channel;
 import simple_player::ffmpeg::ffi;
 import simple_player::util;
 import simple_player::ringbuffer;
-import ffi::sws;
+import simple_player::ffmpeg::ffi::sws;
 
 alias FrameChannel = BufferedChannel{DecodeFrame};
 
