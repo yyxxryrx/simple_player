@@ -18,12 +18,12 @@ fn void RingBuffer.init(&self) @inline {
 }
 
 fn bool RingBuffer.push(&self, Type element) {
-    usz h = self.head.load(mem::AtomicOrdering.ACQUIRE);
-    usz t = self.tail.load(mem::AtomicOrdering.RELAXED);
+    usz h = self.head.load(AtomicOrdering.ACQUIRE);
+    usz t = self.tail.load(AtomicOrdering.RELAXED);
     if (t - h >= SIZE) return false;
 
     self.buffer[t & (SIZE - 1)] = element;
-    self.tail.add(1, mem::AtomicOrdering.RELEASE);
+    self.tail.add(1, AtomicOrdering.RELEASE);
 
     return true;
 }
@@ -36,19 +36,19 @@ fn usz RingBuffer.push_all(&self, Type[] elements) {
 faultdef NO_SUCH_ELEMENT;
 
 fn Type? RingBuffer.pop(&self) {
-    usz h = self.head.load(mem::AtomicOrdering.RELAXED);
-    usz t = self.tail.load(mem::AtomicOrdering.ACQUIRE);
+    usz h = self.head.load(AtomicOrdering.RELAXED);
+    usz t = self.tail.load(AtomicOrdering.ACQUIRE);
 
     if (h >= t) return NO_SUCH_ELEMENT~;
 
     Type item = self.buffer[h & (SIZE - 1)];
-    self.head.add(1, mem::AtomicOrdering.RELEASE);
+    self.head.add(1, AtomicOrdering.RELEASE);
 
     return item;
 }
 
 fn Type[]? RingBuffer.pop_into(&self, Type[] target) {
-    if (self.is_empty()) return target[:0];
+    if (self.is_empty()) return NO_SUCH_ELEMENT~;
 
     sz len = min(target.len, self.available());
     for (sz i = 0; i < len; i++) target[i] = self.pop()!;
@@ -58,17 +58,21 @@ fn Type[]? RingBuffer.pop_into(&self, Type[] target) {
 
 fn bool RingBuffer.is_empty(
     &self
-) @inline => self.head.load(mem::AtomicOrdering.ACQUIRE) >= self.tail.load(mem::AtomicOrdering.ACQUIRE);
+) @inline => self.head.load(AtomicOrdering.ACQUIRE) >= self.tail.load(AtomicOrdering.ACQUIRE);
 
 fn bool RingBuffer.is_full(
     &self
-) @inline => self.tail.load(mem::AtomicOrdering.ACQUIRE) - self.head.load(mem::AtomicOrdering.ACQUIRE) >= SIZE;
+) @inline => self.tail.load(AtomicOrdering.ACQUIRE) - self.head.load(AtomicOrdering.ACQUIRE) >= SIZE;
 
-fn usz RingBuffer.len(&self) @operator(len) => SIZE;
+fn usz RingBuffer.len(
+    &self
+) @operator(len) => self.tail.load(AtomicOrdering.ACQUIRE) - self.head.load(AtomicOrdering.ACQUIRE);
+
+fn usz RingBuffer.size(&self) => SIZE;
 
 fn sz RingBuffer.available(
     &self
-) => SIZE - (sz)(self.tail.load(mem::AtomicOrdering.ACQUIRE) - self.head.load(mem::AtomicOrdering.ACQUIRE));
+) => SIZE - (sz)(self.tail.load(mem::AtomicOrdering.ACQUIRE) - self.head.load(AtomicOrdering.ACQUIRE));
 
 fn void RingBuffer.clear(&self) @inline {
     self.head.store(0, mem::AtomicOrdering.RELEASE);
