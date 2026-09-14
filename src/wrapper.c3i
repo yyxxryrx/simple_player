@@ -14,8 +14,6 @@ struct VideoInfo {
     Rational rate, time_base;
 }
 
-extern fn ZString err2str(int err);
-
 <*
  @param [in] ctx
 

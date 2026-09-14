@@ -53,8 +53,10 @@ fn int decoder(void* input) {
     ffi::SwrContext* swr;
     int ret = ffmpeg::new_swr(&swr, args.audio_ctx, 48000);
     if (ret < 0) {
-        log::error("FFmpeg swr create failed: %s", ffmpeg::err2str(ret));
-        return -1;
+        @pool() {
+            log::error("FFmpeg swr create failed: %s", ffmpeg::err2str(tmem, ret)!!);
+            return -1;
+        };
     }
     defer ffi::swr_free(&swr);
 
@@ -82,8 +84,10 @@ fn int decoder(void* input) {
 
                     ret = ffmpeg::resample_frame(swr, frame, audio_frame, 48000);
                     if (ret < 0) {
-                        log::error("resample failed: %s", ffmpeg::err2str(ret));
-                        continue;
+                        @pool() {
+                            log::error("resample failed: %s", ffmpeg::err2str(tmem, ret)!!);
+                            continue;
+                        };
                     }
                     defer ffi::frame_unref(audio_frame);
 

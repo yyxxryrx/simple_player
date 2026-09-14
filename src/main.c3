@@ -22,19 +22,19 @@ fn int main(String[] args) {
     FormatContext* ctx;
     int ret = ffi::open_input(&ctx, (ZString)args[1].ptr, null, null);
     if (ret != 0) {
-        log::error("FFmpeg error: %s", ffmpeg::err2str(ret));
+        log::error("FFmpeg error: %s", ffmpeg::err2str(tmem, ret)!!);
         return 1;
     }
     defer ffi::close_input(&ctx);
 
     int video_index = ffmpeg::find_best_video(ctx);
     if (video_index < 0) {
-        log::error("FFmpeg error: %s", ffmpeg::err2str(video_index));
+        log::error("FFmpeg error: %s", ffmpeg::err2str(tmem, video_index)!!);
         return 1;
     }
 
     int audio_index = ffmpeg::find_best_audio(ctx);
-    if (audio_index < 0) log::warn("FFmpeg warn: %s", ffmpeg::err2str(audio_index));
+    if (audio_index < 0) log::warn("FFmpeg warn: %s", ffmpeg::err2str(tmem, audio_index)!!);
 
 
     InfoResult res;
@@ -45,7 +45,7 @@ fn int main(String[] args) {
     defer ffi::free_context(&res.ctx);
 
     if (res.code != 0) {
-        log::error("FFmpeg error: %s", ffmpeg::err2str(res.code));
+        log::error("FFmpeg error: %s", ffmpeg::err2str(tmem, res.code)!!);
         return 1;
     }
     VideoInfo info = res.info;
