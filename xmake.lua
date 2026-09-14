@@ -3,7 +3,7 @@ add_rules("mode.debug", "mode.release")
 includes("xmake/rules/c3.lua")
 
 add_requireconfs("*", { configs = { shared = true } })
-add_requires("ffmpeg")
+add_requires("ffmpeg", { configs = { gpl = false } })
 
 target("wrapper")
     set_kind("object")
