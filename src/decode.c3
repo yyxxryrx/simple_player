@@ -74,7 +74,6 @@ fn int decoder(void* input) {
                     long pts = ffmpeg::get_pts(frame);
                     log::debug("Decode %d pts video", pts);
                     ffmpeg::scale(sws_ctx, frame, yuv_frame);
-                    defer ffi::frame_unref(yuv_frame);
 
                     (void)args.channel.push((DecodeFrame) { .pts = pts, .frame = ffi::frame_clone(yuv_frame) });
                 }

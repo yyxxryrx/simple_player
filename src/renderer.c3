@@ -47,7 +47,7 @@ macro void? Renderer.destroy(&self) {
     self.mutex.lock()!;
     self.closed = true;
     self.cv.broadcast()!;
-    self.mutex.lock();
+    self.mutex.unlock();
     self.cv.destroy()!;
     self.mutex.destroy();
 }
