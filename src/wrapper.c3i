@@ -29,6 +29,8 @@ extern fn int find_best_video(FormatContext* ctx);
 extern fn int find_best_audio(FormatContext* ctx);
 
 <*
+ Get Video Info
+
  @param [in] ctx
  @param [out] info
 
@@ -36,14 +38,99 @@ extern fn int find_best_audio(FormatContext* ctx);
 *>
 extern fn bool get_info(FormatContext* ctx, int video_index, InfoResult* info);
 
+<*
+ Create SWS Context
+
+ @param [in] ctx
+ @require ctx != null : "Cannot be a null"
+*>
 extern fn SwsContext* new_sws_context(Frame* ctx);
+
+<*
+ Set frame format to yuv
+
+ @param [in] ctx
+ @param [out] frame
+ @require ctx != null : "Cannot be a null"
+ @require frame != null
+*>
 extern fn void set_to_yuv(CodecContext* ctx, Frame* frame);
+
+<*
+ use SWS to convert the frame
+
+ @param [in] ctx
+ @param [in] src
+ @param [out] dst
+
+ @require ctx != null
+ @require src != null
+ @require dst != null
+*>
 extern fn int scale(SwsContext* ctx, Frame* src, Frame* dst);
+
+<*
+ Get frame data
+
+ @param [in] frame
+
+ @require frame != null
+ @ensure return != null
+*>
 extern fn char** get_data(Frame* frame);
+
+<*
+ Get linesize
+
+ @param [in] frame
+
+ @require frame != null
+ @ensure return != null
+*>
 extern fn int* get_linesize(Frame* frame);
-extern fn int new_codec_ctx(FormatContext* ctx, int index, CodecContext* video_ctx);
+
+<*
+ Create codec context
+ @param [in] ctx
+ @param [out] codec_ctx
+
+ @require ctx != null
+ @require codec_ctx != null
+*>
+extern fn int new_codec_ctx(FormatContext* ctx, int index, CodecContext* codec_ctx);
+
+<*
+ Create swr context
+
+ @param [out] swr
+ @param [in] codec
+*>
 extern fn int new_swr(SwrContext** swr, CodecContext* codec, int out_sample_rate);
+
+<*
+ Resample frame
+
+ @param [in] swr
+ @param [in] in_frame
+ @param [out] out_frame
+*>
 extern fn int resample_frame(SwrContext* swr, Frame* in_frame, Frame* out_frame, int out_sample_rate);
+
+<*
+ Get the per second data size
+
+ @param [in] frame
+*>
 extern fn int get_size(Frame* frame);
+
+<*
+ Convert pts to seconds
+*>
 extern fn double get_time(Rational time_base, long pts);
+
+<*
+ Get frame pts
+
+ @param [in] frame
+*>
 extern fn long get_pts(Frame* frame);

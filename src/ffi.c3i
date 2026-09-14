@@ -56,5 +56,5 @@ extern fn int receive_frame(CodecContext* ctx, Frame* frame) @cname("avcodec_rec
 extern fn CodecContext* alloc_codec_ctx(void* codec) @cname("avcodec_alloc_context3");
 extern fn void swr_free(SwrContext** swr);
 extern fn int str_error(int errnum, char* errbuf, usz errbuf_size) @cname("av_strerror");
-const uint AUDIO_S16SYS = 0x8010;
+const uint AUDIO_S16SYS           = 0x8010;
 const sz AV_ERROR_MAX_STRING_SIZE = 64;
