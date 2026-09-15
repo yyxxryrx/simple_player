@@ -14,14 +14,17 @@ import simple_player::ffmpeg::ffi;
 Atomic{long} total_len;
 
 fn void audio_callback(void* userdata, char* stream, int len) {
-    char[] buf = mem::new_array(char, len);
-    defer mem::free(buf);
-    if (try buffer = simple_player::audio_buffer.pop_into(buf)) {
-        sdl::memcpy(stream, buffer, (usz)len);
-        total_len.add(len, AtomicOrdering.RELEASE);
-    } else {
-        sdl::memset(stream, 0, (usz)len);
-    }
+    mem::@stack_mem(4 * mem::KB ; smem) {
+        char[] buf = alloc::new_array(smem, char, len);
+        defer alloc::free(smem, buf);
+
+        if (try buffer = simple_player::audio_buffer.pop_into(buf)) {
+            sdl::memcpy(stream, buffer, buffer.len);
+            total_len.add(buffer.len, AtomicOrdering.RELEASE);
+        } else {
+            sdl::memset(stream, 0, (usz)len);
+        }
+    };
 }
 
 
