@@ -88,8 +88,8 @@ fn thread::Thread? video_play(
     Rational time_base,
     double fps
 ) {
-    sdl::AudioSpec obtained;
-    sdl::AudioSpec desired = {
+    AudioSpec obtained;
+    AudioSpec desired = {
         .freq = 48000,
         .format = ffi::AUDIO_S16SYS,
         .channels = 2,
@@ -97,13 +97,13 @@ fn thread::Thread? video_play(
         .callback = &audio_callback,
     };
 
-    sdl::AudioDeviceID device = sdl::openAudioDevice(null, 0, &desired, &obtained, 0);
+    AudioDeviceID device = sdl::openAudioDevice(null, 0, &desired, &obtained, 0);
     if (device == 0) {
         log::error("SDL error: %s", sdl::getError());
         return AUDIO_DEVICE_OPEN_FAILED~;
     }
 
-    util::@display(sdl::AudioSpec, obtained);
+    util::@display(AudioSpec, obtained);
 
     sdl::pauseAudioDevice(device, 0);
 
