@@ -15,12 +15,12 @@ float volume                               = 1f;
 
 fn void print_usage(String path) => @pool() {
     io::printn("Simple player");
-    io::printfn("%s [OPTION] <PATH>", path.to_tpath().basename() ?? "simple_player");
+	io::printn();
+    io::printfn("Usage: %s [OPTION] <PATH>", path.to_tpath().basename() ?? "simple_player");
     io::printn();
     io::printn("Option:");
     io::printn("  --volume     Set the player volume [default: 100]");
     io::printn("  -h, --help   Display this info");
-    io::printn();
 }
 
 struct Options {
