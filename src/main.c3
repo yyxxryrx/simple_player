@@ -11,7 +11,7 @@ import simple_player::renderer;
 RingBuffer{char, 2 * mem::MB} audio_buffer = { };
 Atomic{bool} is_running;
 Atomic{sdl::Rect} rect;
-float volume = 1f;
+float volume                               = 1f;
 
 fn void print_usage(String path) => @pool() {
     io::printn("Simple player");
@@ -39,23 +39,21 @@ fn int main(String[] args) {
     }
     defer result.free();
 
-
-    if (result.ext.len() < 1) return 0;
-    String path   = result.ext[0];
-    ZString zpath = path.zstr_tcopy();
-    defer free(zpath);
-
     Options options = result.bind(Options);
     if (options.help) {
         print_usage(args[0]);
         return 0;
     }
 
+    if (result.ext.len() < 1) return 0;
+    String path   = result.ext[0];
+    ZString zpath = path.zstr_tcopy();
+
     if (options.volume < 0 || options.volume > 100) {
         io::eprintn("volume must in [0, 100] range");
         return 1;
     }
-	volume = options.volume / 100f;
+    volume = options.volume / 100f;
 
     is_running.store(true, AtomicOrdering.RELEASE);
 
