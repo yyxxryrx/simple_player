@@ -4,15 +4,58 @@ import std::math;
 import std::thread;
 import std::atomic;
 import sdl;
+import clip;
 import simple_player::ringbuffer;
 import simple_player::renderer;
 
 RingBuffer{char, 2 * mem::MB} audio_buffer = { };
 Atomic{bool} is_running;
 Atomic{sdl::Rect} rect;
+float volume = 1f;
+
+fn void print_usage(String path) => @pool() {
+    io::printn("Simple player");
+    io::printfn("%s [OPTION] <PATH>", path.to_tpath().basename() ?? "simple_player");
+    io::printn();
+    io::printn("Option:");
+    io::printn("  --volume     Set the player volume [default: 100]");
+    io::printn("  -h, --help   Display this info");
+    io::printn();
+}
+
+struct Options {
+    int volume @Default(100);
+    bool help @Short('h') @Flag;
+}
 
 fn int main(String[] args) {
-    if (args.len < 2) return 0;
+    Command command = clip::gen_command(mem, "Simple player", Options);
+    defer command.free();
+
+    ParseResult? result = command.parse(mem, args);
+    if (catch e = result) {
+        io::eprintfn("Cli parse error: %s", e);
+        return 1;
+    }
+    defer result.free();
+
+
+    if (result.ext.len() < 1) return 0;
+    String path   = result.ext[0];
+    ZString zpath = path.zstr_tcopy();
+    defer free(zpath);
+
+    Options options = result.bind(Options);
+    if (options.help) {
+        print_usage(args[0]);
+        return 0;
+    }
+
+    if (options.volume < 0 || options.volume > 100) {
+        io::eprintn("volume must in [0, 100] range");
+        return 1;
+    }
+	volume = options.volume / 100f;
 
     is_running.store(true, AtomicOrdering.RELEASE);
 
@@ -20,7 +63,7 @@ fn int main(String[] args) {
     defer ffi::deinit();
 
     FormatContext* ctx;
-    int ret = ffi::open_input(&ctx, (ZString)args[1].ptr, null, null);
+    int ret = ffi::open_input(&ctx, zpath, null, null);
     if (ret != 0) {
         log::error("FFmpeg error: %s", ffmpeg::err2str(tmem, ret)!!);
         return 1;
@@ -57,7 +100,7 @@ fn int main(String[] args) {
     }
     defer sdl::quit();
 
-    Window* w = sdl::createWindow((ZString)args[1].ptr, 100, 100, info.width, info.height, 0);
+    Window* w = sdl::createWindow(zpath, 100, 100, info.width, info.height, 0);
     if (w == null) {
         log::error("SDL create window failed: %s", (ZString)sdl::getError());
         return -1;

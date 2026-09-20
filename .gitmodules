@@ -1,0 +1,3 @@
+[submodule "lib/clip.c3l"]
+	path = lib/clip.c3l
+	url = https://github.com/yyxxryrx/clip.c3l.git

@@ -2,7 +2,7 @@
   "langrev": "1",
   "warnings":  [ "no-unused" ],
   "dependency-search-paths":  [ "lib" ],
-  "dependencies":  [ "sdl2" ],
+  "dependencies":  [ "sdl2", "clip" ],
   "authors":  [ "yyxxryrx <yyxxryrx@outlook.com>" ],
   "version": "0.1.0",
   "sources":  [ "src/**" ],
