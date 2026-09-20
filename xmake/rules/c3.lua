@@ -82,6 +82,18 @@ rule("c3")
             table.insert(argv, flag)
         end
 
+        local c3lib = as_list(target:get("c3lib"))
+        for _, lib in ipairs(c3lib) do
+            table.insert(argv, "--lib")
+            table.insert(argv, lib)
+        end
+        
+        local c3libdir = as_list(target:get("c3libdir"))
+        for _, libdir in ipairs(c3libdir) do
+            table.insert(argv, "--libdir")
+            table.insert(argv, libdir)
+        end
+
         -- 处理 xmake 包依赖
         for _, pkg in pairs(target:pkgs()) do
             local links = as_list(pkg:get("links"))
