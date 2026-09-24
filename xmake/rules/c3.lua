@@ -2,117 +2,122 @@
 -- C3 语言构建规则（通过 c3c 接入 xmake）
 
 rule("c3")
-    set_extensions(".c3", ".c3i")
-    on_load(function (target) 
-        local c3c = import("lib.detect.find_tool")("c3c")
-        target:add("c3c", c3c.program)
-    end)
+set_extensions(".c3", ".c3i")
+on_load(function(target)
+	local c3c = import("lib.detect.find_tool")("c3c")
+	target:add("c3c", c3c.program)
+end)
 
-    on_build(function (target)
-        local function as_list(v)
-            if type(v) == "string" then
-                return {v}
-            elseif type(v) == "table" then
-                return v
-            end
-            return {}
-        end
+on_build(function(target)
+	local function as_list(v)
+		if type(v) == "string" then
+			return { v }
+		elseif type(v) == "table" then
+			return v
+		end
+		return {}
+	end
 
-        local c3c = target:get("c3c")
+	local c3c = target:get("c3c")
 
-        local c3files = {}
-        for _, src in ipairs(target:sourcefiles()) do
-            local p = tostring(src)
-            table.insert(c3files, p)
-        end
+	local c3files = {}
+	for _, src in ipairs(target:sourcefiles()) do
+		local p = tostring(src)
+		table.insert(c3files, p)
+	end
 
-        if #c3files == 0 then
-            return
-        end
+	if #c3files == 0 then
+		return
+	end
 
-        local targetfile = target:targetfile()
-        if not targetfile then
-            raise("targetfile is nil for target %s", target:name())
-        end
-        target:set("targetfile", targetfile)
-        local dir = path.directory(targetfile)
+	local targetfile = target:targetfile()
+	if not targetfile then
+		raise("targetfile is nil for target %s", target:name())
+	end
+	target:set("targetfile", targetfile)
+	local dir = path.directory(targetfile)
 
-        -- 确保输出目录存在
-        os.mkdir(dir)
+	-- 确保输出目录存在
+	os.mkdir(dir)
 
-        local argv = {}
-        local kind = target:kind()
+	local argv = {}
+	local kind = target:kind()
 
-        if kind == "binary" then
-            table.insert(argv, "compile")
-        elseif kind == "static" then
-            table.insert(argv, "static-lib")
-        elseif kind == "shared" then
-            table.insert(argv, "dynamic-lib")
-        else
-            raise("unsupported target kind '%s' for c3 rule (supported: binary, static, shared)", kind)
-        end
+	if kind == "binary" then
+		table.insert(argv, "compile")
+	elseif kind == "static" then
+		table.insert(argv, "static-lib")
+	elseif kind == "shared" then
+		table.insert(argv, "dynamic-lib")
+	else
+		raise("unsupported target kind '%s' for c3 rule (supported: binary, static, shared)", kind)
+	end
 
-        table.insert(argv, "-o")
-        table.insert(argv, path.join(dir, target:name()))
+	table.insert(argv, "-o")
+	table.insert(argv, path.join(dir, target:name()))
 
-        for _, f in ipairs(c3files) do
-            table.insert(argv, f)
-        end
+	for _, f in ipairs(c3files) do
+		table.insert(argv, f)
+	end
 
-        for _, dep in pairs(target:deps()) do
-            local kind = dep:targetkind()
-            if kind == "object" then
-                for _, o in ipairs(dep:objectfiles()) do
-                    table.insert(argv, o)
-                end 
-            end
-        end
+	for _, dep in pairs(target:deps()) do
+		local target_kind = dep:targetkind()
+		if target_kind == "object" then
+			for _, o in ipairs(dep:objectfiles()) do
+				table.insert(argv, o)
+			end
+		elseif target_kind == "shared" then
+			table.insert(argv, "-l")
+			table.insert(argv, dep:linkname())
+			table.insert(argv, "-L")
+			table.insert(argv, dep:targetdir())
+		end
+	end
 
-        if is_mode("release") then
-            table.insert(argv, "-O5")
-            table.insert(argv, "-g0")
-        else
-            table.insert(argv, "-O0")
-            table.insert(argv, "-g")
-        end
+	if is_mode("release") then
+		table.insert(argv, "-O5")
+		table.insert(argv, "-g0")
+	else
+		table.insert(argv, "-O0")
+		table.insert(argv, "-g")
+	end
 
-        local c3flags = as_list(target:get("c3c_flags"))
-        for _, flag in ipairs(c3flags) do
-            table.insert(argv, flag)
-        end
+	local c3flags = as_list(target:get("c3c_flags"))
+	for _, flag in ipairs(c3flags) do
+		table.insert(argv, flag)
+	end
 
-        local c3lib = as_list(target:get("c3lib"))
-        for _, lib in ipairs(c3lib) do
-            table.insert(argv, "--lib")
-            table.insert(argv, lib)
-        end
-        
-        local c3libdir = as_list(target:get("c3libdir"))
-        for _, libdir in ipairs(c3libdir) do
-            table.insert(argv, "--libdir")
-            table.insert(argv, libdir)
-        end
+	local c3lib = as_list(target:get("c3lib"))
+	for _, lib in ipairs(c3lib) do
+		table.insert(argv, "--lib")
+		table.insert(argv, lib)
+	end
 
-        -- 处理 xmake 包依赖
-        for _, pkg in pairs(target:pkgs()) do
-            local links = as_list(pkg:get("links"))
-            for _, link in ipairs(links) do
-                table.insert(argv, "-l")
-                table.insert(argv, link)
-            end
+	local c3libdir = as_list(target:get("c3libdir"))
+	for _, libdir in ipairs(c3libdir) do
+		table.insert(argv, "--libdir")
+		table.insert(argv, libdir)
+	end
 
-            local linkdirs = as_list(pkg:get("linkdirs"))
-            for _, dir in ipairs(linkdirs) do
-                table.insert(argv, "-L")
-                table.insert(argv, dir)
-            end
-        end
+	-- 处理 xmake 包依赖
+	for _, pkg in pairs(target:pkgs()) do
+		local links = as_list(pkg:get("links"))
+		for _, link in ipairs(links) do
+			table.insert(argv, "-l")
+			table.insert(argv, link)
+		end
 
-        for _, lib in ipairs(as_list(target:get("syslinks"))) do
-            table.insert(argv, "-l")
-            table.insert(argv, lib)
-        end
+		local linkdirs = as_list(pkg:get("linkdirs"))
+		for _, dir in ipairs(linkdirs) do
+			table.insert(argv, "-L")
+			table.insert(argv, dir)
+		end
+	end
 
-        os.vrunv(c3c, argv)
-    end)
+	for _, lib in ipairs(as_list(target:get("syslinks"))) do
+		table.insert(argv, "-l")
+		table.insert(argv, lib)
+	end
+
+	os.vrunv(c3c, argv)
+end)
