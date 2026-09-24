@@ -12,7 +12,7 @@ simple_player path/to/video.mp4
 
 ## Build
 
-Require `c3c` and `xmake`
+Require `c3c`, `odin` and `xmake`
 
 ### Build Release
 
