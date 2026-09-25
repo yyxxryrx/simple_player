@@ -20,7 +20,7 @@ target("simple_player")
 set_kind("binary")
 add_rules("c3")
 add_deps("wrapper", "miniaudio")
-add_files("src/*.c3", "src/*.c3i")
+add_files("src/**.c3", "src/**.c3i")
 add_packages("ffmpeg")
 if not is_os("windows") then
 	add_syslinks("m")

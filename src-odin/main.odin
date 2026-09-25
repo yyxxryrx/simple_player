@@ -26,12 +26,12 @@ init_device :: proc "c" (
 	deviceConfig.playback.format = miniaudio.format.s16
 	deviceConfig.pUserData = data
 	deviceConfig.dataCallback = data_callback
-	return miniaudio.device_init(nil, &deviceConfig, device) == miniaudio.result.SUCCESS
+	return miniaudio.device_init(nil, &deviceConfig, device) == .SUCCESS
 }
 
 @(export = true)
 device_start :: proc "c" (device: ^miniaudio.device) -> bool {
-	return miniaudio.device_start(device) == miniaudio.result.SUCCESS
+	return miniaudio.device_start(device) == .SUCCESS
 }
 
 @(export = true)

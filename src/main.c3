@@ -15,7 +15,7 @@ float volume                               = 1f;
 
 fn void print_usage(String path) => @pool() {
     io::printn("Simple player");
-	io::printn();
+    io::printn();
     io::printfn("Usage: %s [OPTION] <PATH>", path.to_tpath().basename() ?? "simple_player");
     io::printn();
     io::printn("Option:");
@@ -142,20 +142,20 @@ fn int main(String[] args) {
         ffmpeg::get_time(info.rate, 1)
     )!!;
 
-    rect.store({ .w = info.width, .h = info.height }, AtomicOrdering.RELEASE);
+    rect.store({ .w = info.width, .h = info.height }, RELEASE);
 
     Event event;
     while MAIN: (true) {
         if (sdl::pollEvent(&event)) {
             switch (event.type) {
-                case EventType.QUIT:
+                case QUIT:
                     log::debug("SDL Event: Quit the window");
                     is_running.store(false, AtomicOrdering.RELEASE);
                     break MAIN;
-                case EventType.WINDOWEVENT:
+                case WINDOWEVENT:
                     switch ((WindowEventID)event.window.event) {
                         // case WindowEventID.WINDOWEVENT_RESIZED:
-                        case WindowEventID.WINDOWEVENT_SIZE_CHANGED:
+                        case WINDOWEVENT_SIZE_CHANGED:
                             int width = event.window.data1;
                             int height = event.window.data2;
                             log::info("Resize to: %dx%d", width, height);
