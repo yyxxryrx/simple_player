@@ -15,6 +15,12 @@ on_build(function(target)
 
 	local argv = { "build" }
 
+	local targetfile = target:targetfile()
+	local dir = path.directory(targetfile)
+
+	-- 确保输出目录存在
+	os.mkdir(dir)
+
 	local files = target:sourcefiles()
 	if #files > 0 then
 		table.insert(argv, path.directory(files[1]))
