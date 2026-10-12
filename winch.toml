@@ -1,0 +1,7 @@
+[toolchain.msvc]
+version = "18"
+platform = "x64"
+
+[dev.vcpkg]
+enable = true
+triplet = "x64-windows"

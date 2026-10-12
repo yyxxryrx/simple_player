@@ -6,14 +6,22 @@
   "authors":  [ "yyxxryrx <yyxxryrx@outlook.com>" ],
   "version": "0.1.0",
   "sources":  [ "src/**" ],
+  "c-sources": [ "src-c/**" ],
   "test-sources":  [ "test/**" ],
   "build-dir": "build",
   "output": "build",
   "targets": {
     "simple_player": {
-      "type": "executable"
+      "type": "executable",
+      "linked-libraries": [
+        "avutil",
+        "avformat",
+        "avcodec",
+        "swscale",
+        "swresample"
+      ]
     }
   },
   "cpu": "generic",
-  "opt": "O0"
+  "opt": "O3"
 }
