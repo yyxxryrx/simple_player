@@ -10,7 +10,7 @@ Make a simple video player
 simple_player path/to/video.mp4
 ```
 
-## Build
+## Build with `Xmake`
 
 Require `c3c`, `odin` and `xmake`
 
@@ -26,6 +26,14 @@ xmake build
 ```bash
 xmake f -m debug
 xmake build
+```
+
+## Build with `c3c` and `winch`
+
+Require `vcpkg`, `c3c` and `winch`
+
+```bash
+winch run c3c build
 ```
 
 ## License
